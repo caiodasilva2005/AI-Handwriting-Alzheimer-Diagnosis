@@ -1,0 +1,3 @@
+"""
+Runs full pipeline 
+"""

@@ -1,0 +1,3 @@
+"""
+CNN training loop 
+"""
