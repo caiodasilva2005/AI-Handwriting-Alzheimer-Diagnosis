@@ -1,1 +1,6 @@
 kagglehub
+pandas
+numpy
+matplotlib
+torch
+torchvision
