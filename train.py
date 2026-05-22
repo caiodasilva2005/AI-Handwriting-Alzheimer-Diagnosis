@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import v2
 from data import DarwinDownloader, HandwritingAlzheimerDataset, SampleType
 
-NUM_ITERATIONS = 2
+NUM_ITERATIONS = 5
 class Trainer:
     def __init__(self, model, loss_function, optimizer, trainloader):
         self.model = model
