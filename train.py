@@ -46,9 +46,9 @@ transform = v2.Compose([
 net = CNN()
 lossFunction = nn.CrossEntropyLoss()
 
-# Learning rate: 1e-3 (small for fine-tuning pretrained weights; a larger LR would wipe out the ImageNet features)
 # Momentum: 0.9 (allows for the optimizer to accelerate in the correct direction of the current step's gradient)
-optimizer = optim.SGD(net.parameters(), lr=1e-3, momentum=0.9)
+trainable = [p for p in net.parameters() if p.requires_grad]
+optimizer = optim.SGD(trainable, lr=1e-2, momentum=0.9)
 
 downloader = DarwinDownloader()
 annotations, image_dir = downloader.generateAnnotations(SampleType.RGB_ON_PAPER, 2)
