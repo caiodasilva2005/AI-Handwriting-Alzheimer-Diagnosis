@@ -20,7 +20,7 @@ class PatientType(Enum):
 # Download latest version
 class DarwinDownloader:
     def __init__(self):
-        self.dataset_path = self.downloadDarwinDataset()
+        self.dataset_path = self._downloadDarwinDataset()
         self.tasks = {
             SampleType.RGB_ON_PAPER: (2, 3, 4, 5, 21, 24),
             SampleType.OFFLINE: (2, 3, 4, 5, 21, 24)
@@ -30,7 +30,7 @@ class DarwinDownloader:
         return f"TASK_{taskNumber:02d}"
 
     # returns the path the DARWIN dataset is downloaded to
-    def downloadDarwinDataset(self):
+    def _downloadDarwinDataset(self):
         try: 
             path = kagglehub.dataset_download("tizianadalessandro/darwin-i")
         except Exception as e:
