@@ -1,8 +1,10 @@
+"""
+CNN tetsing loop 
+"""
 
 import torch
 
 class Tester:
-
     def test(self, model, dataloader):
         correct = 0
         total = 0
