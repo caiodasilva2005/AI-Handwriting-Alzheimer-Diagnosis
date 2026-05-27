@@ -15,6 +15,7 @@ from torchvision.io import decode_image, ImageReadMode
 DATASET_IMAGES_DIR = "dataset_offline - task_2_25"
 PROJECT_ROOT = path.abspath(path.join(path.dirname(__file__), "..", ".."))                                                                                                                                           
 DEFAULT_ANNOTATIONS_DIR = path.join(PROJECT_ROOT, "data", "annotations") 
+
 class SampleType(Enum):
     TEST = "Test"
     TRAIN = "Train"

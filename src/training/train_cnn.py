@@ -21,7 +21,7 @@ transform = v2.Compose([
     v2.ToDtype(torch.float32, scale=True),
     v2.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])])
 
-NUM_EPOCHS = 30
+NUM_EPOCHS = 15
 BATCH_SIZE = 16
 LEARNING_RATE = 1e-3
 PROJECT_ROOT = path.abspath(path.join(path.dirname(__file__), "..", ".."))
