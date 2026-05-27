@@ -1,31 +1,47 @@
 """
-CNN training loop 
+CNN training loop
 """
 
 import os
+from os import path
 import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader
+from torchvision.transforms import v2
 
+from data.image_loader import DarwinDownloader, HandwritingAlzheimerDataset, SampleType
+from models.cnn import CNN
 
-class Trainer:
-    def __init__(self, loss_function, optimizer):
-        self.loss_function = loss_function
-        self.optimizer = optimizer
+transform = v2.Compose([
+    v2.ToImage(),
+    v2.Resize((299, 299)),
+    v2.ToDtype(torch.float32, scale=True)])
 
-    def train(self, model, dataloader, num_iterations):
-        for _ in range(num_iterations):
-            for data in dataloader:
-                inputs, labels = data
+NUM_ITERATIONS = 10
+BATCH_SIZE = 16
+LEARNING_RATE = 1e-4
+MOMENTUM = 0.9
+PROJECT_ROOT = path.abspath(path.join(path.dirname(__file__), "..", ".."))                                                                                                                                           
+MODEL_SAVE_PATH = path.join(PROJECT_ROOT, "models", "cnn.pth") 
 
-                # zero the parameter gradients
-                self.optimizer.zero_grad()
+downloader = DarwinDownloader()
+annotations_path, image_dir = downloader.generateAnnotations(SampleType.TRAIN, foldCount=1)
 
-                # forward + backward + optimize
-                outputs = model(inputs)
-                loss = self.loss_function(outputs, labels)
-                loss.backward()
+dataset = HandwritingAlzheimerDataset(annotations_path, image_dir, transform=transform)
+dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-                self.optimizer.step()
+model = CNN()
+optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+loss_function = nn.CrossEntropyLoss()
 
-    def saveModel(self, model, path):
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        torch.save(model.state_dict(), path)
+for iteration in range(NUM_ITERATIONS):
+    for inputs, labels in dataloader:
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = loss_function(outputs, labels)
+        loss.backward()
+        optimizer.step()
+
+os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
+torch.save(model.state_dict(), MODEL_SAVE_PATH)

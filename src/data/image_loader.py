@@ -10,25 +10,24 @@ import kagglehub
 import shutil
 import pandas as pd
 from torch.utils.data import Dataset
-from torchvision.io import decode_image
+from torchvision.io import decode_image, ImageReadMode
 
+DATASET_IMAGES_DIR = "dataset_offline - task_2_25"
+PROJECT_ROOT = path.abspath(path.join(path.dirname(__file__), "..", ".."))                                                                                                                                           
+DEFAULT_ANNOTATIONS_DIR = path.join(PROJECT_ROOT, "data", "annotations") 
 class SampleType(Enum):
-    RGB_ON_PAPER = "rgb_on_paper"
-    OFFLINE = "offline"
-
+    TEST = "Test"
+    TRAIN = "Train"
+    VAL = "Val"
 class PatientType(Enum):
     HEALTHY = ("HC", 0)
-    ALZHEIMER = ("AD", 1)
+    ALZHEIMER = ("PT", 1)
 
 # Download latest version
 class DarwinDownloader:
     def __init__(self):
         self.dataset_path = self._downloadDarwinDataset()
-        self.tasks = {
-            SampleType.RGB_ON_PAPER: (2, 3, 4, 5, 21, 24),
-            SampleType.OFFLINE: (2, 3, 4, 5, 21, 24)
-        }
-
+        
     def _formatTaskNumber(self, taskNumber):
         return f"TASK_{taskNumber:02d}"
 
@@ -41,24 +40,30 @@ class DarwinDownloader:
     
         return path
     
-    def generateAnnotations(self, sampleType, taskNumber, annoationsDir="data/annotations"):
-        if taskNumber not in self.tasks[sampleType]:
-            raise ValueError(f"Invalid task number {taskNumber} for sample type {sampleType}")
+    def generateAnnotations(self, sampleType, foldCount=5, annoationsDir=DEFAULT_ANNOTATIONS_DIR):
 
-        task_path = path.join(self.dataset_path, sampleType.value, sampleType.value, self._formatTaskNumber(taskNumber))
-        
+        if foldCount < 1 or foldCount > 5:
+            raise Exception("Invalid Fold Count. Must be from 1 - 5.")
+
         os.makedirs(annoationsDir, exist_ok=True)
-        
-        image_dir_path = path.join(annoationsDir, self._formatTaskNumber(taskNumber))
+        image_dir_path = path.join(annoationsDir, sampleType.value)
         os.makedirs(image_dir_path, exist_ok=True)
 
         rows = []
-        for label_name, label in ((PatientType.HEALTHY.value[0], PatientType.HEALTHY.value[1]), 
-                                  (PatientType.ALZHEIMER.value[0], PatientType.ALZHEIMER.value[1])):
-            class_dir = path.join(task_path, label_name)
-            for filename in sorted(os.listdir(class_dir)):
-                rows.append((filename, label))
-                shutil.copy(path.join(class_dir, filename), image_dir_path)
+        # Tasks Range from TASK_02 to TASK_25
+        for taskNumber in range(2, 26):
+            # Each TASK has up to folds from Fold1 - Fold5
+            for foldNum in range(1, foldCount + 1):
+                task_path = path.join(self.dataset_path, DATASET_IMAGES_DIR, DATASET_IMAGES_DIR, self._formatTaskNumber(taskNumber), f"Fold{foldNum}", sampleType.value)
+
+                for label_name, label in ((PatientType.HEALTHY.value[0], PatientType.HEALTHY.value[1]),
+                                        (PatientType.ALZHEIMER.value[0], PatientType.ALZHEIMER.value[1])):
+                    class_dir = path.join(task_path, label_name)
+                    for filename in sorted(os.listdir(class_dir)):
+                        stem, ext = path.splitext(filename)
+                        new_filename = f"{stem}_Fold{foldNum}{ext}"
+                        rows.append((new_filename, label))
+                        shutil.copy(path.join(class_dir, filename), path.join(image_dir_path, new_filename))
 
         annotations_path = path.join(annoationsDir, "annotations.csv")
         print(f"Saving annotations to {annotations_path}")
@@ -77,7 +82,7 @@ class HandwritingAlzheimerDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
-        image = decode_image(img_path)
+        image = decode_image(img_path, mode=ImageReadMode.RGB)
         label = self.img_labels.iloc[idx, 1]
         if self.transform:
             image = self.transform(image)
