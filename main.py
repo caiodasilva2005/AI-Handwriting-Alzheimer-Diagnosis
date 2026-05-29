@@ -4,6 +4,7 @@ from model import ResnetCNN, CustomCNN, HandwritingModel
 from test import Tester
 from train import Trainer
 from torchvision.transforms import v2
+from gradcam import generate_gradcam
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -66,6 +67,7 @@ def main():
         "2": ("Train Custom CNN", train_custom, custom_model),
         "3": ("Test ResNet CNN", run_test, resnet_model),
         "4": ("Test Custom CNN", run_test, custom_model),
+        "5": ("Generate Custom CNN GradCAM", None, None)
     }
     while True:
         print("\n--- Handwriting Alzheimer Classifier ---")
@@ -76,6 +78,9 @@ def main():
         if choice == "q":
             return 0
         action = actions.get(choice)
+        if choice == "5":
+            image_path = input("Enter image path: ").strip()
+            generate_gradcam("data/custom.pth", image_path)
         if action is None:
             print("Invalid choice.")
             continue
