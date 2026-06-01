@@ -3,6 +3,9 @@ MLP Training loop
 """
 import torch
 import torch.nn as nn
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 
 def train_mlp(model, train_loader, test_loader, num_epochs=100, learning_rate=0.001, device="cpu", patience=10):
@@ -71,3 +74,19 @@ def train_mlp(model, train_loader, test_loader, num_epochs=100, learning_rate=0.
     # Restore best model
     model.load_state_dict(best_model_state)
     return model, epoch_losses
+
+if __name__ == "__main__":
+    from data.kinematic_loader import load_kinematic_data
+    from models.mlp import KinematicMLP
+    import os
+
+    CSV_PATH = "datasets/kinematic_data.csv"
+    MODEL_SAVE = "models/mlp.pth"
+
+    train_loader, test_loader, input_size = load_kinematic_data(CSV_PATH, k=30)
+    model = KinematicMLP(input_size=input_size, dropout_rate=0.4)
+    model, losses = train_mlp(model, train_loader, test_loader, num_epochs=300, learning_rate=0.0005, patience=25)
+
+    os.makedirs("models", exist_ok=True)
+    torch.save(model.state_dict(), MODEL_SAVE)
+    print(f"Model saved to {MODEL_SAVE}")
