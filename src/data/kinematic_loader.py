@@ -48,3 +48,37 @@ def load_kinematic_data(csv_path, k=50, test_size=0.2, batch_size=16, random_see
     print(f"Train: {len(X_train)} samples | Test: {len(X_test)} samples | Features: {X_train.shape[1]}")
 
     return train_loader, test_loader, X_train.shape[1]
+
+def load_kinematic_with_ids(csv_path, k=30, random_seed=42):
+    np.random.seed(random_seed)
+
+    df = pd.read_csv(csv_path)
+    X = df.drop(columns=["ID", "class"])
+    y = (df["class"] == "P").astype(int).values
+
+    participant_ids = df["ID"].str.extract(r'(\d+)').astype(int).values.flatten()
+
+    selector = SelectKBest(f_classif, k=k)
+    X_selected = selector.fit_transform(X, y)
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X_selected)
+
+    kinematic_map = {}
+    for i, pid in enumerate(participant_ids):
+        kinematic_map[pid] = (X_scaled[i], y[i])
+
+    print(f"Loaded kinematic data for {len(kinematic_map)} participants")
+    return kinematic_map
+
+def get_task_features_for_participant(csv_path, pid, task_num):
+    """
+    Returns the 18 kinematic features for a specific participant and task.
+    """
+    import re
+    df = pd.read_csv(csv_path)
+    df['pid'] = df['ID'].str.extract(r'(\d+)').astype(int)
+    
+    row = df[df['pid'] == pid].iloc[0]
+    cols = [c for c in df.columns if re.search(r'[a-z]' + str(task_num) + r'$', c)]
+    return row[cols].values.astype(np.float32)
