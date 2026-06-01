@@ -33,8 +33,6 @@ annotations_path, image_dir = downloader.generateAnnotations(SampleType.TRAIN, f
 dataset = HandwritingAlzheimerDataset(annotations_path, image_dir, transform=transform)
 dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
 
-print("train label distribution:", Counter(dataset.img_labels.iloc[:, 1].tolist()))
-
 model = CNN()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 loss_function = nn.CrossEntropyLoss()
