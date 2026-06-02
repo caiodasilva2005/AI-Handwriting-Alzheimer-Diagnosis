@@ -72,12 +72,18 @@ class IntermediateFusionModel(nn.Module):
         # MLP.network without its final Linear(64, 1) + Sigmoid (last two modules).
         return self._mlp.network[:-2](kinematic)  # (B, 64)
 
-    def forward(self, image, kinematic):
-        # Extract frozen features without tracking gradients through base models.
+    def extract_features(self, image, kinematic):
+        """Concatenated frozen feature vector (B, 192). Base models never change,
+        so these can be precomputed once and reused across training epochs."""
         with torch.no_grad():
-            cnn_feat = self._cnn_features(image)   # (B, 128)
+            cnn_feat = self._cnn_features(image)      # (B, 128)
             mlp_feat = self._mlp_features(kinematic)  # (B, 64)
+        return torch.cat([cnn_feat, mlp_feat], dim=1)  # (B, 192)
 
-        fused = torch.cat([cnn_feat, mlp_feat], dim=1)  # (B, 192)
-        logit = self.combiner(fused)                    # (B, 1)
-        return self.activation(logit)                   # P(Alzheimer), (B, 1)
+    def classify(self, fused):
+        """Run only the trainable combiner on a fused feature vector (B, 192)."""
+        return self.activation(self.combiner(fused))   # P(Alzheimer), (B, 1)
+
+    def forward(self, image, kinematic):
+        fused = self.extract_features(image, kinematic)  # (B, 192)
+        return self.classify(fused)                      # P(Alzheimer), (B, 1)
