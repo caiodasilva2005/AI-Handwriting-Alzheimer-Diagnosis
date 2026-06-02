@@ -6,7 +6,6 @@ import os
 from os import path
 from enum import Enum
 import pandas as pd
-import kagglehub
 import shutil
 import pandas as pd
 from torch.utils.data import Dataset
@@ -34,6 +33,7 @@ class DarwinDownloader:
 
     # returns the path the DARWIN dataset is downloaded to
     def _downloadDarwinDataset(self):
+        import kagglehub
         try: 
             path = kagglehub.dataset_download("tizianadalessandro/darwin-i")
         except Exception as e:
@@ -90,3 +90,23 @@ class HandwritingAlzheimerDataset(Dataset):
         if self.target_transform:
             label = self.target_transform(label)
         return image, label
+    
+def get_image_for_participant(image_base, pid, task_num, transform=None):
+    """
+    Finds and returns the image for a specific participant and task.
+    """
+    task_folder = f'TASK_{task_num:02d}'
+    ptype = 'PT' if pid <= 89 else 'HC'
+    num = pid if pid <= 89 else pid - 89
+    filename = f'E06_T{task_num:02d}_{ptype}6_{num:03d}.png'
+
+    for fold in range(1, 6):
+        for split in ['Train', 'Val', 'Test']:
+            img_path = os.path.join(image_base, task_folder, f'Fold{fold}', split, ptype, filename)
+            if os.path.exists(img_path):
+                if transform:
+                    from torchvision.io import decode_image, ImageReadMode
+                    image = decode_image(img_path, mode=ImageReadMode.RGB)
+                    return transform(image)
+                return img_path
+    return None
