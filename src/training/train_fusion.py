@@ -3,7 +3,10 @@ Fusion Model training loop
 """
 
 import os
+import sys
 from os import path
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import torch
 import torch.nn as nn
@@ -16,7 +19,7 @@ from models.fusion import IntermediateFusionModel
 
 PROJECT_ROOT = path.abspath(path.join(path.dirname(__file__), "..", ".."))
 CNN_PATH = path.join(PROJECT_ROOT, "models", "cnn.pth")
-MLP_PATH = path.join(PROJECT_ROOT, "models", "mlp.pth")
+MLP_PATH = path.join(PROJECT_ROOT, "models", "mlp_fusion.pth")
 CSV_PATH = path.join(PROJECT_ROOT, "datasets", "kinematic_data.csv")
 MODEL_SAVE_PATH = path.join(PROJECT_ROOT, "models", "fusion.pth")
 
@@ -102,7 +105,7 @@ if __name__ == "__main__":
 
     # --- Kinematic loader (uses the train split; shuffle handled inside) ---
     kinematic_loader, _test_loader, num_features = load_kinematic_data(
-        CSV_PATH, k=50, batch_size=BATCH_SIZE)
+        CSV_PATH, k=18, batch_size=BATCH_SIZE)
 
     model = IntermediateFusionModel(CNN_PATH, MLP_PATH, mlp_input_size=num_features)
     model, _ = train_fusion(model, image_loader, kinematic_loader)
