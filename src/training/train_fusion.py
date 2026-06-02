@@ -10,20 +10,21 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
-from torchvision.transforms import v2
 
-from data.image_loader import DarwinDownloader, HandwritingAlzheimerDataset, SampleType
-from data.kinematic_loader import load_kinematic_data
+from data.fusion_loader import save_fusion_dataset, load_saved_fusion_data
 from models.fusion import IntermediateFusionModel
 
 PROJECT_ROOT = path.abspath(path.join(path.dirname(__file__), "..", ".."))
 CNN_PATH = path.join(PROJECT_ROOT, "models", "cnn.pth")
 MLP_PATH = path.join(PROJECT_ROOT, "models", "mlp_fusion.pth")
 CSV_PATH = path.join(PROJECT_ROOT, "datasets", "kinematic_data.csv")
+FUSION_PKL = path.join(PROJECT_ROOT, "datasets", "fusion_dataset.pkl")
 MODEL_SAVE_PATH = path.join(PROJECT_ROOT, "models", "fusion.pth")
 
-def train_fusion(model, image_loader, kinematic_loader,
+# The fusion MLP (models/mlp_fusion.pth) consumes 18 raw kinematic features per task.
+MLP_INPUT_SIZE = 18
+
+def train_fusion(model, fusion_loader,
                  num_epochs=100, learning_rate=0.001, patience=10):
 
     model = model.to("cpu")
@@ -45,12 +46,12 @@ def train_fusion(model, image_loader, kinematic_loader,
         total = 0
         num_batches = 0
 
-        # Step both loaders in lockstep; entries correspond by order.
-        for (images, img_labels), (kin_features, _) in zip(image_loader, kinematic_loader):
+        # Each triplet is already paired by (participant, task), so a single loader
+        # keeps the image and kinematic streams aligned.
+        for images, kin_features, batch_labels in fusion_loader:
             images = images.to("cpu")
             kin_features = kin_features.to("cpu")
-            # Image label is the target (kinematic label is assumed identical).
-            labels = img_labels.to("cpu").float().unsqueeze(1)
+            labels = batch_labels.to("cpu").float().unsqueeze(1)
 
             predictions = model(images, kin_features)  # (B, 1) P(Alzheimer)
             loss = criterion(predictions, labels)
@@ -91,24 +92,16 @@ if __name__ == "__main__":
 
     BATCH_SIZE = 16
 
-    # --- Image loader (shuffle=False so order is stable for pairing) ---
-    transform = v2.Compose([
-        v2.ToImage(),
-        v2.Resize((299, 299)),
-        v2.ToDtype(torch.float32, scale=True),
-        v2.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])])
+    # Build the paired (image, kinematic, label) dataset once and cache it to disk.
+    if not path.exists(FUSION_PKL):
+        save_fusion_dataset(CSV_PATH, save_path=FUSION_PKL)
 
-    downloader = DarwinDownloader()
-    annotations_path, image_dir = downloader.generateAnnotations(SampleType.TRAIN, foldCount=1)
-    image_dataset = HandwritingAlzheimerDataset(annotations_path, image_dir, transform=transform)
-    image_loader = DataLoader(image_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    # Loaders do not shuffle; each triplet is self-paired by (participant, task).
+    train_loader, _test_loader = load_saved_fusion_data(
+        save_path=FUSION_PKL, batch_size=BATCH_SIZE)
 
-    # --- Kinematic loader (uses the train split; shuffle handled inside) ---
-    kinematic_loader, _test_loader, num_features = load_kinematic_data(
-        CSV_PATH, k=18, batch_size=BATCH_SIZE)
-
-    model = IntermediateFusionModel(CNN_PATH, MLP_PATH, mlp_input_size=num_features)
-    model, _ = train_fusion(model, image_loader, kinematic_loader)
+    model = IntermediateFusionModel(CNN_PATH, MLP_PATH, mlp_input_size=MLP_INPUT_SIZE)
+    model, _ = train_fusion(model, train_loader)
 
     os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
     torch.save(model.state_dict(), MODEL_SAVE_PATH)
