@@ -3,10 +3,15 @@ CNN testing loop
 """
 
 from os import path
+import os
 
 import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import v2
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
 from collections import Counter
 
 from data.image_loader import DarwinDownloader, HandwritingAlzheimerDataset, SampleType
