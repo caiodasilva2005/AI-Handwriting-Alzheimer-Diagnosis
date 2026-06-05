@@ -1,5 +1,5 @@
 """
-Grad-CAM visualizations 
+Grad-CAM visualizations
 """
 
 import os
@@ -12,46 +12,32 @@ from torchvision.transforms import v2
 
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
-from models.cnn import CNN
 
-# from main.py
 transform = v2.Compose([
     v2.ToImage(),
     v2.Resize((299, 299)),
     v2.ToDtype(torch.float32, scale=True)
 ])
 
-def generate_gradcam(model_path, image_path, output_dir="gradcam_outputs"):
+def generate_gradcam(model, image_path, output_dir="static/gradcams"):
+    """ generate GradCAM viz for a loaded CNN model
+    returns filename of saved image"""
 
-    device = torch.device("cpu")
-    model = CNN()
-
-    if not os.path.exists(model):
-        raise IOError(f"The model at path {model_path} does not exist.")
-    
-    model.load_state_dict(
-        torch.load(model_path, map_location=device)
-    )
-
-    model.to(device)
     model.eval()
 
     # last layer
-    target_layers = [model.conv2]
+    target_layers = [model.features[-3]]
 
-    # load image - change to greyscale?
     pil_img = Image.open(image_path).convert("RGB")
 
     rgb_img = np.array(
         pil_img.resize((299, 299))
-    ) / 255.0
-
+    ).astype(np.float32) / 255.0
+    
     input_tensor = transform(pil_img)
+    input_tensor = input_tensor.unsqueeze(0)
 
-    input_tensor = input_tensor.unsqueeze(0).to(device)
-
-    # gradcam
-    cam = GradCAM(model=model, target_layers=target_layers)
+    cam = GradCAM(model=model,target_layers=target_layers)
 
     grayscale_cam = cam(input_tensor=input_tensor)[0]
 
@@ -61,9 +47,11 @@ def generate_gradcam(model_path, image_path, output_dir="gradcam_outputs"):
     # save
     os.makedirs(output_dir, exist_ok=True)
 
-    filename = os.path.basename(image_path)
-    output_path = os.path.join(output_dir, f"gradcam_{filename}")
+    og = os.path.basename(image_path)
+
+    filename = f"gradcam_{og}"
+    output_path = os.path.join(output_dir, filename)
 
     cv2.imwrite(output_path, cv2.cvtColor(visualization, cv2.COLOR_RGB2BGR))
 
-    print(f"Saved GradCAM to: {output_path}")
+    return filename
