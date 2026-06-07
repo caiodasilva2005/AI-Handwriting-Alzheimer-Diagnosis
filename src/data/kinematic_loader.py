@@ -47,7 +47,7 @@ def load_kinematic_data(csv_path, k=50, test_size=0.2, batch_size=16, random_see
 
     print(f"Train: {len(X_train)} samples | Test: {len(X_test)} samples | Features: {X_train.shape[1]}")
 
-    return train_loader, test_loader, X_train.shape[1]
+    return train_loader, test_loader, X_train.shape[1], selector, scaler
 
 def load_kinematic_with_ids(csv_path, k=30, random_seed=42):
     np.random.seed(random_seed)

@@ -1,5 +1,5 @@
 """
-Grad-CAM visualizations 
+Grad-CAM visualizations
 """
 
 import os
@@ -7,51 +7,37 @@ import cv2
 import torch
 import numpy as np
 
-from PIL import Image
 from torchvision.transforms import v2
+from torchvision.io import decode_image, ImageReadMode
 
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
-from models.cnn import CNN
 
-# from main.py
-transform = v2.Compose([
-    v2.ToImage(),
-    v2.Resize((299, 299)),
-    v2.ToDtype(torch.float32, scale=True)
-])
+def generate_gradcam(model, image_path, output_dir="static/gradcams"):
+    """ generate GradCAM viz for a loaded CNN model
+    returns filename of saved image"""
 
-def generate_gradcam(model_path, image_path, output_dir="gradcam_outputs"):
-
-    device = torch.device("cpu")
-    model = CNN()
-
-    if not os.path.exists(model):
-        raise IOError(f"The model at path {model_path} does not exist.")
-    
-    model.load_state_dict(
-        torch.load(model_path, map_location=device)
-    )
-
-    model.to(device)
     model.eval()
 
     # last layer
-    target_layers = [model.conv2]
+    target_layers = [model.features[-3]]
 
-    # load image - change to greyscale?
-    pil_img = Image.open(image_path).convert("RGB")
+    image = decode_image(image_path, mode=ImageReadMode.RGB)
+    rgb_img = (v2.Resize((299, 299))(image).permute(1, 2, 0).float().numpy() / 255.0)
 
-    rgb_img = np.array(
-        pil_img.resize((299, 299))
-    ) / 255.0
+    transform = v2.Compose([
+            v2.ToImage(),
+            v2.Resize((299, 299)),
+            v2.ToDtype(torch.float32, scale=True),
+            v2.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+        ])
 
-    input_tensor = transform(pil_img)
+    image = decode_image(image_path, mode=ImageReadMode.RGB)
+    image = transform(image)
 
-    input_tensor = input_tensor.unsqueeze(0).to(device)
+    input_tensor = image.unsqueeze(0)
 
-    # gradcam
-    cam = GradCAM(model=model, target_layers=target_layers)
+    cam = GradCAM(model=model,target_layers=target_layers)
 
     grayscale_cam = cam(input_tensor=input_tensor)[0]
 
@@ -61,9 +47,9 @@ def generate_gradcam(model_path, image_path, output_dir="gradcam_outputs"):
     # save
     os.makedirs(output_dir, exist_ok=True)
 
-    filename = os.path.basename(image_path)
-    output_path = os.path.join(output_dir, f"gradcam_{filename}")
+    filename = f"gradcam_{os.path.basename(image_path)}"
+    output_path = os.path.join(output_dir, filename)
 
     cv2.imwrite(output_path, cv2.cvtColor(visualization, cv2.COLOR_RGB2BGR))
 
-    print(f"Saved GradCAM to: {output_path}")
+    return filename

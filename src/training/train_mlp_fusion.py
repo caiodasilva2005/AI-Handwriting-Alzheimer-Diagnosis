@@ -19,12 +19,13 @@ from models.mlp import KinematicMLP
 from training.train_mlp import train_mlp
 from evaluation.metrics import evaluate, plot_confusion_matrix
 import re
+import joblib
 
 DROP_PARTICIPANTS = [46, 79, 106, 107, 133, 134, 135, 136, 137]
 FUSEABLE_TASKS = list(range(2, 26))
 CSV_PATH = "datasets/kinematic_data.csv"
 MODEL_SAVE = "models/mlp_fusion.pth"
-
+SCALER_SAVE = "models/fusion_scaler.pkl"
 
 def load_fusion_kinematic_data(csv_path, test_size=0.2, batch_size=16, random_seed=42):
     """
@@ -67,11 +68,11 @@ def load_fusion_kinematic_data(csv_path, test_size=0.2, batch_size=16, random_se
     test_loader  = DataLoader(KinematicDataset(X_test, y_test),   batch_size=batch_size, shuffle=False)
 
     print(f"Fusion kinematic data: {len(X_train)} train | {len(X_test)} test | 18 features per task")
-    return train_loader, test_loader
+    return train_loader, test_loader, scaler
 
 
 if __name__ == "__main__":
-    train_loader, test_loader = load_fusion_kinematic_data(CSV_PATH)
+    train_loader, test_loader, scaler = load_fusion_kinematic_data(CSV_PATH)
 
     model = KinematicMLP(input_size=18, dropout_rate=0.4)
     model, losses = train_mlp(model, train_loader, test_loader, num_epochs=300, learning_rate=0.0005, patience=25)
@@ -81,4 +82,7 @@ if __name__ == "__main__":
 
     os.makedirs("models", exist_ok=True)
     torch.save(model.state_dict(), MODEL_SAVE)
+    joblib.dump(scaler, "models/fusion_scaler.pkl")
+    
     print(f"Fusion MLP saved to {MODEL_SAVE}")
+    print(f"Fusion scaler saved to {SCALER_SAVE}")
