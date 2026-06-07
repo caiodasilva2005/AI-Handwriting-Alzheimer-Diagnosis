@@ -2,6 +2,8 @@ import os
 import sys
 import torch
 import pandas as pd
+import joblib
+import numpy as np
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(ROOT, "src"))
@@ -28,6 +30,9 @@ class Predictor:
         self.mlp.load_state_dict(torch.load("models/mlp.pth", map_location=self.device))
         self.mlp.eval()
 
+        self.mlpselector = joblib.load("models/mlp_selector.pkl")
+        self.mlpscaler = joblib.load("models/mlp_scaler.pkl")
+
         # fusion model
         self.fusion = IntermediateFusionModel("models/cnn.pth", "models/mlp_fusion.pth", 18)
         self.fusion.load_state_dict(torch.load("models/fusion.pth", map_location=self.device))
@@ -50,12 +55,25 @@ class Predictor:
             }
 
         # kinematic only - MLP
-        # fix
         if csv_path and not image_path:
+            X = self._preprocess_kinematic_csv(csv_path)
+
+            with torch.no_grad():
+                probs = self.mlp(X).squeeze()
+
+            prob = float(probs.mean())
+            
+            if prob >= 0.5:
+                prediction = "Alzheimer"
+                confidence = prob
+            else:
+                prediction = "Control"
+                confidence = 1 - prob
+
             return {
                 "model_used": "MLP",
-                "prediction": "pass",
-                "confidence": 0.0,
+                "prediction": prediction,
+                "confidence": confidence,
                 "gradcam": None
             }
 
@@ -72,3 +90,17 @@ class Predictor:
         return {
             "error": "No input provided"
         }
+
+    def _preprocess_kinematic_csv(self, csv_path):
+        df = pd.read_csv(csv_path)
+
+        if "ID" in df.columns:
+            df = df.drop(columns=["ID"])
+
+        if "class" in df.columns:
+            df = df.drop(columns=["class"])
+
+        X_selected = self.mlpselector.transform(df)
+        X_scaled = self.mlpscaler.transform(X_selected)
+
+        return torch.tensor(X_scaled, dtype=torch.float32)
