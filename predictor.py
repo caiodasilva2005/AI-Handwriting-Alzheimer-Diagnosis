@@ -53,13 +53,7 @@ class Predictor:
             prob = float(probs[0, 1])
 
             gradcam_file = generate_gradcam(self.cnn, image_path)
-
-            if prob >= 0.5:
-                prediction = "Alzheimer"
-                confidence = prob
-            else:
-                prediction = "Control"
-                confidence = 1 - prob
+            prediction, confidence = self._get_prediction(prob)
 
             return {
                 "model_used": "CNN",
@@ -76,13 +70,7 @@ class Predictor:
                 probs = self.mlp(X).squeeze()
 
             prob = float(probs.mean())
-            
-            if prob >= 0.5:
-                prediction = "Alzheimer"
-                confidence = prob
-            else:
-                prediction = "Control"
-                confidence = 1 - prob
+            prediction, confidence = self._get_prediction(prob)
 
             return {
                 "model_used": "MLP",
@@ -100,13 +88,7 @@ class Predictor:
                 prob = float(self.fusion(image_tensor, kinematic_tensor).squeeze())
 
             gradcam_file = generate_gradcam(self.cnn, image_path)
-
-            if prob >= 0.5:
-                prediction = "Alzheimer"
-                confidence = prob
-            else:
-                prediction = "Control"
-                confidence = 1 - prob
+            prediction, confidence = self._get_prediction(prob)
 
             return {
                 "model_used": "Fusion",
@@ -121,12 +103,7 @@ class Predictor:
 
     def _preprocess_kinematic_csv(self, csv_path):
         df = pd.read_csv(csv_path)
-
-        if "ID" in df.columns:
-            df = df.drop(columns=["ID"])
-
-        if "class" in df.columns:
-            df = df.drop(columns=["class"])
+        df = self._clean_df(pd.read_csv(csv_path))
 
         X_selected = self.mlp_selector.transform(df)
         X_scaled = self.mlp_scaler.transform(X_selected)
@@ -147,12 +124,16 @@ class Predictor:
 
     def _preprocess_fusion_kinematic(self, csv_path):
         df = pd.read_csv(csv_path)
-
-        if "ID" in df.columns:
-            df = df.drop(columns=["ID"])
-        if "class" in df.columns:
-            df = df.drop(columns=["class"])
+        df = self._clean_df(pd.read_csv(csv_path))
 
         X = df.values.astype("float32")
         X_scaled = self.fusion_scaler.transform(X)
         return torch.tensor(X_scaled, dtype=torch.float32)
+
+    def _get_prediction(self, prob):
+        if prob >= 0.5:
+            return "Alzheimer", prob
+        return "Control", 1 - prob
+
+    def _clean_df(self, df):
+        return df.drop(columns=["ID", "class"], errors="ignore")

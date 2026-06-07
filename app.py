@@ -23,28 +23,16 @@ def predict():
     csv_path = None
 
     if image_file and image_file.filename:
-        image_path = os.path.join(
-            UPLOAD_FOLDER,
-            image_file.filename
-        )
+        image_path = os.path.join(UPLOAD_FOLDER, image_file.filename)
         image_file.save(image_path)
 
     if csv_file and csv_file.filename:
-        csv_path = os.path.join(
-            UPLOAD_FOLDER,
-            csv_file.filename
-        )
+        csv_path = os.path.join(UPLOAD_FOLDER, csv_file.filename)
         csv_file.save(csv_path)
 
-    result = predictor.predict(
-        image_path=image_path,
-        csv_path=csv_path
-    )
+    result = predictor.predict(image_path=image_path, csv_path=csv_path)
 
-    return render_template(
-        "index.html",
-        result=result
-    )
+    return render_template("index.html", result=result)
 
 if __name__ == "__main__":
     app.run(debug=True)
