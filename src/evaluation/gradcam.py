@@ -7,17 +7,13 @@ import cv2
 import torch
 import numpy as np
 
-from PIL import Image
 from torchvision.transforms import v2
+from torchvision.io import decode_image, ImageReadMode
+
+from preprocess import preprocess_image
 
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
-
-transform = v2.Compose([
-    v2.ToImage(),
-    v2.Resize((299, 299)),
-    v2.ToDtype(torch.float32, scale=True)
-])
 
 def generate_gradcam(model, image_path, output_dir="static/gradcams"):
     """ generate GradCAM viz for a loaded CNN model
@@ -28,14 +24,10 @@ def generate_gradcam(model, image_path, output_dir="static/gradcams"):
     # last layer
     target_layers = [model.features[-3]]
 
-    pil_img = Image.open(image_path).convert("RGB")
+    image = decode_image(image_path, mode=ImageReadMode.RGB)
+    rgb_img = (v2.Resize((299, 299))(image).permute(1, 2, 0).float().numpy() / 255.0)
 
-    rgb_img = np.array(
-        pil_img.resize((299, 299))
-    ).astype(np.float32) / 255.0
-    
-    input_tensor = transform(pil_img)
-    input_tensor = input_tensor.unsqueeze(0)
+    input_tensor = preprocess_image(image_path)
 
     cam = GradCAM(model=model,target_layers=target_layers)
 
@@ -47,9 +39,7 @@ def generate_gradcam(model, image_path, output_dir="static/gradcams"):
     # save
     os.makedirs(output_dir, exist_ok=True)
 
-    og = os.path.basename(image_path)
-
-    filename = f"gradcam_{og}"
+    filename = f"gradcam_{os.path.basename(image_path)}"
     output_path = os.path.join(output_dir, filename)
 
     cv2.imwrite(output_path, cv2.cvtColor(visualization, cv2.COLOR_RGB2BGR))

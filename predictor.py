@@ -20,17 +20,17 @@ class Predictor:
 
         # standalone cnn
         self.cnn = CNN()
-        self.cnn.load_state_dict(torch.load("models/cnn.pth", map_location="cpu"))
+        self.cnn.load_state_dict(torch.load("models/cnn.pth", map_location=self.device))
         self.cnn.eval()
 
         # standalone mlp (30)
         self.mlp = KinematicMLP(input_size=30)
-        self.mlp.load_state_dict(torch.load("models/mlp.pth", map_location="cpu"))
+        self.mlp.load_state_dict(torch.load("models/mlp.pth", map_location=self.device))
         self.mlp.eval()
 
-        # ? fix
+        # fusion model
         self.fusion = IntermediateFusionModel("models/cnn.pth", "models/mlp_fusion.pth", 18)
-        self.fusion.load_state_dict(torch.load("models/fusion.pth", map_location="cpu"))
+        self.fusion.load_state_dict(torch.load("models/fusion.pth", map_location=self.device))
         self.fusion.eval()
 
     def predict(self, image_path=None, csv_path=None):
