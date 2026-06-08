@@ -3,6 +3,22 @@ Project for CS4100: Foundations of AI involving using an AI model to diagnose Al
 
 <img width="932" height="705" alt="AI_Handwriting_Alzheimer_Diagnosis" src="https://github.com/user-attachments/assets/27283049-b5c2-4294-acee-aa70bbb0e54a" />
 
+## Running the Frontend
+
+The frontend is a [Flask](https://flask.palletsprojects.com/) web app (`app.py`) that lets you upload an image and/or CSV handwriting sample and returns a diagnosis.
+
+From the repo root:
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the app
+python app.py
+```
+
+Then open **http://127.0.0.1:5000** in your browser. The app runs in debug mode by default.
+
 **Design Structure:**
 - Since the Handwriting Sample Consists of two different types of data (Image Data and Tabular Data) then we can split it into two separate models
 - Each section, Image Processing and Tabular Processing, are completely disjoint from each other and only come together in a multimodal fusion model. This way we can optionally have an image input or a CSV input, or both.
