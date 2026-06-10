@@ -101,12 +101,46 @@ class Predictor:
             "error": "No input provided"
         }
 
-    def _preprocess_kinematic_csv(self, csv_path):
-        df = pd.read_csv(csv_path)
-        df = self._clean_df(pd.read_csv(csv_path))
+    def _read_csv(self, csv_path):
+        import pandas.errors
 
-        X_selected = self.mlp_selector.transform(df)
-        X_scaled = self.mlp_scaler.transform(X_selected)
+        try:
+            df = pd.read_csv(csv_path)
+        except pandas.errors.EmptyDataError:
+            raise ValueError("The CSV file is empty.")
+        except pandas.errors.ParserError:
+            raise ValueError("The CSV file is malformatted and could not be parsed.")
+        except UnicodeDecodeError:
+            raise ValueError("The CSV file could not be read. Make sure it is a plain-text CSV.")
+        except Exception as e:
+            raise ValueError(f"The CSV file could not be read: {e}")
+
+        if df.empty:
+            raise ValueError("The CSV file contains no data rows.")
+
+        return df
+
+    def _preprocess_kinematic_csv(self, csv_path):
+        df = self._clean_df(self._read_csv(csv_path))
+
+        expected = getattr(self.mlp_selector, "feature_names_in_", None)
+        if expected is not None:
+            missing = [c for c in expected if c not in df.columns]
+            if missing:
+                raise ValueError(
+                    f"The CSV is missing {len(missing)} expected DARWIN feature "
+                    f"column(s) (e.g. {', '.join(map(str, missing[:3]))}). The "
+                    f"standalone MLP needs the full DARWIN-format CSV."
+                )
+            df = df[list(expected)]
+
+        try:
+            X_selected = self.mlp_selector.transform(df)
+            X_scaled = self.mlp_scaler.transform(X_selected)
+        except ValueError:
+            raise ValueError(
+                "The CSV contains non-numeric or invalid values in its feature columns."
+            )
 
         return torch.tensor(X_scaled, dtype=torch.float32)
 
@@ -118,16 +152,35 @@ class Predictor:
             v2.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
         ])
 
-        image = decode_image(image_path, mode=ImageReadMode.RGB)
+        try:
+            image = decode_image(image_path, mode=ImageReadMode.RGB)
+        except Exception:
+            raise ValueError(
+                "The image file could not be read. It may be corrupted or not a "
+                "valid image."
+            )
+
         image = transform(image)
         return image.unsqueeze(0)
 
     def _preprocess_fusion_kinematic(self, csv_path):
-        df = pd.read_csv(csv_path)
-        df = self._clean_df(pd.read_csv(csv_path))
+        df = self._clean_df(self._read_csv(csv_path))
 
-        X = df.values.astype("float32")
-        X_scaled = self.fusion_scaler.transform(X)
+        expected = getattr(self.fusion_scaler, "n_features_in_", 18)
+        if df.shape[1] != expected:
+            raise ValueError(
+                f"For fusion (image + CSV), the CSV must contain exactly {expected} "
+                f"single-task feature columns, but {df.shape[1]} were found."
+            )
+
+        try:
+            X = df.values.astype("float32")
+            X_scaled = self.fusion_scaler.transform(X)
+        except ValueError:
+            raise ValueError(
+                "The CSV contains non-numeric or invalid values in its feature columns."
+            )
+
         return torch.tensor(X_scaled, dtype=torch.float32)
 
     def _get_prediction(self, prob):
