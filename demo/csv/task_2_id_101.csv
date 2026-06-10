@@ -1,0 +1,2 @@
+ID,air_time2,disp_index2,gmrt_in_air2,gmrt_on_paper2,max_x_extension2,max_y_extension2,mean_acc_in_air2,mean_acc_on_paper2,mean_gmrt2,mean_jerk_in_air2,mean_jerk_on_paper2,mean_speed_in_air2,mean_speed_on_paper2,num_of_pendown2,paper_time2,pressure_mean2,pressure_var2,total_time2
+id_101,440,7.58E-06,79.41225017,141.2545233,204,5312,0.274011601,0.076136081,110.3333867,0.047227521,0.010501668,2.123927473,2.800747552,1,4455,1962.072952,103461.3583,4895
