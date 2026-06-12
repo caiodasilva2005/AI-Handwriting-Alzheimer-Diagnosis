@@ -8,7 +8,7 @@ import numpy as np
 from torchvision.io import decode_image, ImageReadMode
 from torchvision.transforms import v2
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(ROOT, "src"))
 
 from models.cnn import CNN

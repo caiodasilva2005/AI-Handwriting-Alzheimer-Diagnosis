@@ -2,9 +2,16 @@ from flask import Flask, render_template, request
 from predictor import Predictor
 import os
 
-app = Flask(__name__)
+# src/frontend/app.py -> project root is three levels up
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-UPLOAD_FOLDER = "uploads"
+app = Flask(
+    __name__,
+    template_folder=os.path.join(ROOT, "templates"),
+    static_folder=os.path.join(ROOT, "static"),
+)
+
+UPLOAD_FOLDER = os.path.join(ROOT, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".webp"}

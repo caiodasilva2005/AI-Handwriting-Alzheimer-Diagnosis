@@ -5,7 +5,7 @@ Project for CS4100: Foundations of AI involving using an AI model to diagnose Al
 
 ## Running the Frontend
 
-The frontend is a [Flask](https://flask.palletsprojects.com/) web app (`app.py`) that lets you upload an image and/or CSV handwriting sample and returns a diagnosis.
+The frontend is a [Flask](https://flask.palletsprojects.com/) web app (`src/frontend/app.py`) that lets you upload an image and/or CSV handwriting sample and returns a diagnosis.
 
 From the repo root:
 
@@ -14,7 +14,7 @@ From the repo root:
 pip install -r requirements.txt
 
 # Start the app
-python app.py
+python src/frontend/app.py
 ```
 
 Then open **http://127.0.0.1:5000** in your browser. The app runs in debug mode by default.
@@ -25,7 +25,7 @@ The `scripts/` directory contains helper shell scripts for running, training, an
 
 | Script | Description |
 | --- | --- |
-| `run_app.sh` | Launches the Flask frontend web app (`app.py`). |
+| `run_app.sh` | Launches the Flask frontend web app (`src/frontend/app.py`). |
 | `train_cnn.sh` | Trains the CNN image-processing model. |
 | `train_mlp.sh` | Trains the MLP tabular-processing model. |
 | `train_fusion.sh` | Trains the multimodal fusion model. |
