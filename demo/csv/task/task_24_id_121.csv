@@ -1,0 +1,2 @@
+ID,air_time24,disp_index24,gmrt_in_air24,gmrt_on_paper24,max_x_extension24,max_y_extension24,mean_acc_in_air24,mean_acc_on_paper24,mean_gmrt24,mean_jerk_in_air24,mean_jerk_on_paper24,mean_speed_in_air24,mean_speed_on_paper24,num_of_pendown24,paper_time24,pressure_mean24,pressure_var24,total_time24
+id_121,13955,2.52E-05,115.2792891,155.5703604,7498,7766,0.197893642,0.118095414,135.4248248,0.023960632,0.015213075,1.895671768,2.515678727,25,17500,1878.540857,172143.6866,31455
