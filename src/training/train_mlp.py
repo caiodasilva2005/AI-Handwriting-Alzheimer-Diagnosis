@@ -29,7 +29,6 @@ def train_mlp(model, train_loader, test_loader, num_epochs=100, learning_rate=0.
     best_model_state = None
 
     for epoch in range(num_epochs):
-        # --- Training ---
         model.train()
         total_loss = 0.0
         correct = 0
@@ -54,7 +53,7 @@ def train_mlp(model, train_loader, test_loader, num_epochs=100, learning_rate=0.
         train_acc = correct / total
         epoch_losses.append(avg_train_loss)
 
-        # --- Validation ---
+        # Validation
         model.eval()
         test_loss = 0.0
         with torch.no_grad():
@@ -69,7 +68,7 @@ def train_mlp(model, train_loader, test_loader, num_epochs=100, learning_rate=0.
         if (epoch + 1) % 10 == 0:
             print(f"Epoch [{epoch+1}/{num_epochs}] Train Loss: {avg_train_loss:.4f} | Train Acc: {train_acc:.4f} | Val Loss: {avg_test_loss:.4f}")
 
-        # --- Early stopping ---
+        # Eaerly stopping on validation loss
         if avg_test_loss < best_test_loss:
             best_test_loss = avg_test_loss
             best_model_state = model.state_dict().copy()

@@ -25,9 +25,6 @@ MODEL_SAVE_PATH = path.join(PROJECT_ROOT, "models", "fusion.pth")
 MLP_INPUT_SIZE = 18
 
 def precompute_features(model, fusion_loader):
-    """Run the frozen CNN+MLP once over the whole loader and cache the fused
-    (N, 192) feature vectors and (N, 1) labels. These never change during
-    training, so doing this once avoids re-running the CNN every epoch."""
     model = model.to("cpu")
     model.eval()
 
@@ -50,11 +47,10 @@ def train_fusion(model, fusion_loader, num_epochs=100, learning_rate=0.001,
     model = model.to("cpu")
     criterion = nn.BCELoss()
 
-    # Only the combiner has requires_grad=True; CNN and MLP are frozen.
     trainable_params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.Adam(trainable_params, lr=learning_rate)
 
-    # Extract the frozen features a single time, then train only the combiner.
+    # Extracts frozen features form base model
     features, labels = precompute_features(model, fusion_loader)
     num_samples = features.size(0)
 
@@ -63,14 +59,15 @@ def train_fusion(model, fusion_loader, num_epochs=100, learning_rate=0.001,
     epochs_no_improve = 0
     best_model_state = None
 
+    # this training loop updates the combiner layer only
     for epoch in range(num_epochs):
-        model.train()  # base models stay in eval() via the model's train() override
+        model.train() 
         total_loss = 0.0
         correct = 0
         total = 0
         num_batches = 0
 
-        # Iterate the cached features in fixed-order batches (no shuffling).
+        # Iterate the cached features in fixed-order batches 
         for start in range(0, num_samples, batch_size):
             feat = features[start:start + batch_size]
             target = labels[start:start + batch_size]
@@ -114,12 +111,11 @@ if __name__ == "__main__":
 
     BATCH_SIZE = 16
 
-    # Build the paired (image, kinematic, label) dataset once and cache it to disk.
     if not path.exists(FUSION_PKL):
         save_fusion_dataset(CSV_PATH, save_path=FUSION_PKL)
 
     # Loaders do not shuffle; each triplet is self-paired by (participant, task).
-    train_loader, _test_loader = load_saved_fusion_data(
+    train_loader, _ = load_saved_fusion_data(
         save_path=FUSION_PKL, batch_size=BATCH_SIZE)
 
     model = IntermediateFusionModel(CNN_PATH, MLP_PATH, mlp_input_size=MLP_INPUT_SIZE)

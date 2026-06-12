@@ -1,14 +1,5 @@
 """
-Fusion MLP testing loop
-
-Loads the standalone 18-feature kinematic MLP (models/mlp_fusion.pth) — the
-kinematic stream of the fusion model — and evaluates it on the held-out test
-split. Reports the prediction / label distributions plus accuracy, precision,
-recall and F1 via the shared evaluate() helper.
-
-The fusion MLP outputs a single sigmoid probability just like the regular MLP,
-so evaluate() works directly; the only difference from test_mlp.py is the data
-(18 raw features per task instead of 30 SelectKBest features).
+Fusion MLP testing loop (MLP trained on the 18 kinematic features from the fusion dataset)
 """
 
 import os

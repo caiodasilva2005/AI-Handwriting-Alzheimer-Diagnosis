@@ -27,11 +27,8 @@ CSV_PATH = "datasets/kinematic_data.csv"
 MODEL_SAVE = "models/mlp_fusion.pth"
 SCALER_SAVE = "models/fusion_scaler.pkl"
 
+#    Loads kinematic data as 18 features per task per participant.
 def load_fusion_kinematic_data(csv_path, test_size=0.2, batch_size=16, random_seed=42):
-    """
-    Loads kinematic data as 18 features per task per participant.
-    Matches exactly what the fusion dataset provides.
-    """
     np.random.seed(random_seed)
 
     df = pd.read_csv(csv_path).copy()
