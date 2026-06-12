@@ -42,3 +42,11 @@ The `scripts/` directory contains helper shell scripts for running, training, an
 - There is a MLP to process the Tabular Sample from the CSV
 - Both are fed into a fusion model which uses there output to produce a combined output and more accurate diagnosis
 - Results are processed and displayed in a GUI. In the case an Image Sample was used, then the Grad-CAM output will also be displayed in the GUI
+
+**AI Disclosure:**
+We used AI tools to facilate the following:
+- The frontend was completely designed with AI
+- Altough model architecting was mainly our design, AI tools helped debug issues such as transform sizing of images for the CNN and how to properly
+freeze model layers for the Intermediate Fusion Model
+- Gather diagnostics for each model. We used AI to automate test scripts as well as gather diagnostics like F1 score, precision, and recall during evaluation
+- AI was used to debug issues with overfitting that occurred during training of the CNN
