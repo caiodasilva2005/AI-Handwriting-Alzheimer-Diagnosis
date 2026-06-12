@@ -17,6 +17,15 @@ python src/frontend/app.py
 
 Then open **http://127.0.0.1:5000** in your browser. The app runs in debug mode by default.
 
+**Demo Data:**
+- A selection of sample data is provided in the /demo directory for testing purposes. The available data includes: 
+    - /images: original images for use in the CNN and Fusion model
+    - /csv/patient: patient kinematic data for use in the standalone MLP
+    - /csv/task: patient/task-specific kinematic data for use in the Fusion model
+- All files are labeled using patient global IDs. The ID ranges correspond to the following groups:
+    - 1-89: Alzheimer's disease
+    - 90-174: Healthy control
+
 ## Scripts
 
 The `scripts/` directory contains helper shell scripts for running, training, and testing the models. Activate your virtual environment first, then run a script from the repo root, e.g. `./scripts/train_cnn.sh`. Any extra arguments are passed through to the underlying Python program.
@@ -46,15 +55,6 @@ The `scripts/` directory contains helper shell scripts for running, training, an
 **Important Notes:**
 - The models should be trained **per task** meaning that each time a sample is input to a model, an indicator for which task it is associated with should be included (consists of a `taskId`). From a user perspective, the GUI can have a drop for Task 1-25 to select the task the sample is associated with in the DARWIN dataset.
 - Completing the CNN and Grad-CAM portion (Image Processing Section) is the top priority and marks the MVP of this project. This should be completed as soon as possible.
-
-**Demo Data:**
-- A selection of sample data is provided in the /demo directory for testing purposes. The available data includes: 
-    - /images: original images for use in the CNN and Fusion model
-    - /csv/patient: patient kinematic data for use in the standalone MLP
-    - /csv/task: patient/task-specific kinematic data for use in the Fusion model
-- All files are labeled using patient global IDs. The ID ranges correspond to the following groups:
-    - 1-89: Alzheimer's disease
-    - 90-174: Healthy control
 
 ## AI Disclosure
 We used AI tools to facilate the following:
