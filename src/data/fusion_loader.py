@@ -95,13 +95,7 @@ def save_fusion_dataset(csv_path, save_path="datasets/fusion_dataset.pkl"):
 
 
 def load_saved_fusion_data(save_path="datasets/fusion_dataset.pkl", test_size=0.2, batch_size=16, random_seed=42):
-    """Load pre-saved fusion dataset from disk.
-
-    Each sample is a self-contained (image, kinematic, label) triplet already paired
-    by participant and task, so neither loader shuffles - order is stable and the two
-    streams stay aligned. A one-time seeded permutation only decides the train/test
-    split (so both splits contain both classes), not per-epoch ordering.
-    """
+    """Load pre-saved fusion dataset from disk."""
     np.random.seed(random_seed)
 
     with open(save_path, 'rb') as f:

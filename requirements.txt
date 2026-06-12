@@ -4,4 +4,6 @@ numpy
 matplotlib
 torch
 torchvision
-pytorch_grad_cam
+grad-cam
+flask
+opencv-python
