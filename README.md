@@ -52,10 +52,6 @@ The `scripts/` directory contains helper shell scripts for running, training, an
 
 <img width="932" height="705" alt="AI_Handwriting_Alzheimer_Diagnosis" src="https://github.com/user-attachments/assets/27283049-b5c2-4294-acee-aa70bbb0e54a" />
 
-**Important Notes:**
-- The models should be trained **per task** meaning that each time a sample is input to a model, an indicator for which task it is associated with should be included (consists of a `taskId`). From a user perspective, the GUI can have a drop for Task 1-25 to select the task the sample is associated with in the DARWIN dataset.
-- Completing the CNN and Grad-CAM portion (Image Processing Section) is the top priority and marks the MVP of this project. This should be completed as soon as possible.
-
 ## AI Disclosure
 We used AI tools to facilate the following:
 - The frontend was completely designed with AI
