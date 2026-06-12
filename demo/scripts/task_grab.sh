@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # for demo purposes; extract participant/task data from kinematic_data.csv
+# usage: ./task_grab [TASK] [ID]
+# ID is global; Alzheimer's patients are 1-89, healthy controls 90-174
 
 TASK=$1
 ID_NUM=$2
