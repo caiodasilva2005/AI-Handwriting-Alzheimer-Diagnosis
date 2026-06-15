@@ -51,3 +51,4 @@ We used AI tools to facilate the following:
 freeze model layers for the Intermediate Fusion Model
 - Gather diagnostics for each model. We used AI to automate test scripts as well as gather diagnostics like F1 score, precision, and recall during evaluation
 - AI was used to debug issues with overfitting that occurred during training of the CNN
+- Used to help outline GitHub issues after our group designed an outlined plan for the project
